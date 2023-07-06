@@ -172,3 +172,13 @@ Una vez que hayas configurado el archivo `.env` con la cadena de conexión corre
 
 ## Client 
 Acá esta lo que ve el usuario y los endpoints relacionados a esta sección son los que aparecen al inicio (Endpoints generales de la aplicación). Acá podremos desde front agregar usuarios a nuestra base de datos de mongo.
+
+
+## contributions
+
+This project is open to contributions. If you would like to collaborate, please submit a pull request. Thanks for getting here. :heartpulse::wink: 
+
+## This project was done by:
+
+
+[Gabriela García](https://github.com/GabrielaSpace)
