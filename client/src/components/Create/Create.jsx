@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 function Create() {
+  const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [newUser, setNewUser] = useState(null);
@@ -10,27 +12,33 @@ function Create() {
     e.preventDefault();
 
     const newUser = {
+      _id: id,
       name,
       email,
-      registrationDate: new Date().toISOString(),
     };
 
     try {
-      const response = await axios.post("http://localhost:3000/api/users/create", newUser);
+      const response = await axios.post(
+        "http://localhost:3000/api/users/create",
+        newUser
+      );
       console.log("Usuario creado exitosamente");
       setNewUser(response.data);
     } catch (error) {
       console.error(error);
     }
 
+    setId("");
     setName("");
     setEmail("");
   };
 
   return (
-    <div>
-      <h3>Creación de usuario</h3>
+    
+    <div className="botones">
+      
       <form onSubmit={handleSubmit}>
+      
         <div>
           <label htmlFor="name">Nombre:</label>
           <input
@@ -54,13 +62,14 @@ function Create() {
 
       {newUser && (
         <div>
-          <h3>Usuario creado:</h3>
-          <p>{newUser.name} - {newUser.email}</p>
+          
         </div>
       )}
+      <div>
+      <Link to="/database" className="links" > Consultar usuarios</Link>
+      </div>
     </div>
   );
 }
 
 export default Create;
-

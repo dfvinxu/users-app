@@ -1,4 +1,6 @@
 const User = require("../models/users");
+const mongoose = require("mongoose");
+
 
 const getUsers = async (req, res) => {
     try {
@@ -23,14 +25,22 @@ const getUserById = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-    const { _id, name, email, registrationDate } = req.body;
+    const { name, email, registrationDate } = req.body;
     try {
-        const newUser = await User.create({ _id, name, email, registrationDate });
-        res.status(201).json({ message: "Usuario creado correctamente", user: newUser });
+      const newUser = await User.create({
+        _id: new mongoose.Types.ObjectId(),
+        name,
+        email,
+        registrationDate,
+      });
+      res
+        .status(201)
+        .json({ message: "Usuario creado correctamente", user: newUser });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+      res.status(400).json({ message: error.message });
     }
-};
+  };
+  
 
 const updateUserById = async (req, res) => {
     const { id } = req.params;

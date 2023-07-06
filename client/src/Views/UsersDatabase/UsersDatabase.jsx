@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import UserCard from "../../components/UserCard/UserCard";
+import { Link } from "react-router-dom";
+
 
 function UsersDatabase() {
   const [users, setUsers] = useState([]);
@@ -19,11 +21,19 @@ function UsersDatabase() {
   };
 
   return (
-    <div>
-      <h3>Lista Usuarios registrados</h3>
+    <div >
+      <h3 className="title">Lista de usuarios ({users.length})</h3>
+    <div className="botones">
+      
+      <div className="botones-2">
+      
       {users.map((user) => (
         <UserCard key={user._id} user={user} />
       ))}
+      </div>
+      
+       <Link to="/register"  className="links" > Registrar nuevo usuario</Link> 
+    </div>
     </div>
   );
 }

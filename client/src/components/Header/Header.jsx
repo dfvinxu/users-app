@@ -1,9 +1,15 @@
 import React from "react";
+import './Header.css'
+import { Link } from "react-router-dom";
+import {SlHome} from "react-icons/sl";
 
 function Header() {
     return(
-        <div>
-            <h3> holi soy el header</h3>
+        <div className="header">
+            
+            <div className='navBar'>
+            <Link to="/"><SlHome fontSize="large" color='#fff' size={30} /></Link> 
+      </div>
         </div>
     )
 }
