@@ -2,11 +2,11 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 
 function UserCard({ user }) {
-  const navigate = useNavigate();
+
 
   return (
     <div>
-      <article onClick={() => navigate(`/userDetail/${user._id}`)} style={{ cursor: "pointer" }}>
+      <article>
         <div>
           <span>Name: {user.name}</span>
           </div>

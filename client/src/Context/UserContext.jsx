@@ -20,9 +20,9 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const getUser = async (name) => {
+  const getUser = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/users/${name}`);
+      const response = await axios.get(`http://localhost:3000/api/users/${id}`);
       return response.data;
     } catch (error) {
       console.error(error);
