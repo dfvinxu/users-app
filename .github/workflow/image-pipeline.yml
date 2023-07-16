@@ -1,0 +1,107 @@
+name: Deploy to App Runner - Image based # Name of the workflow
+
+on:
+  push:
+    branches: [ main ] # Trigger workflow on git push to main branch
+  workflow_dispatch: # Allow manual invocation of the workflow
+jobs:
+  deploy-server:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+        
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1   
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: server
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+  deploy-client:
+      needs: deploy-server
+      runs-on: ubuntu-latest
+      
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+            persist-credentials: false
+          
+        - name: Configure AWS credentials
+          id: aws-credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-region: ${{ secrets.AWS_REGION }}
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+        - name: Login to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1   
+        
+        - name: Build, tag, and push image to Amazon ECR
+          id: build-image
+          env:
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            ECR_REPOSITORY: client
+            IMAGE_TAG: ${{ github.sha }}
+          run: |
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+  
+  deploy-to-apprunner:
+    needs: [deploy-server, deploy-client]
+    runs-on: ubuntu-latest
+    id: deploy-apprunner
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+      - name: Deploy server to App Runner
+        id: deploy-server
+        run: |
+          aws apprunner create-service \
+            --region ${{ secrets.AWS_REGION }} \
+            --service-name server-app-runner \
+            --source-configuration "ImageRepositoryType=ECR ImageIdentifier=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/server:latest" \
+            --instance-configuration "InstanceRoleArn=${{ secrets.ROLE_ARN }}"
+      
+      - name: Deploy client to App Runner
+        id: deploy-client
+        run: |
+          aws apprunner create-service \
+            --region ${{ secrets.AWS_REGION }} \
+            --service-name client-app-runner \
+            --source-configuration "ImageRepositoryType=ECR ImageIdentifier=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/client:latest" \
+            --instance-configuration "InstanceRoleArn=${{ secrets.ROLE_ARN }}"
+      
+      - name: Output service URLs
+        run: |
+          echo "Server App Runner URL: $(aws apprunner describe-service --region ${{ secrets.AWS_REGION }} --service-arn ${{ steps.deploy-server.outputs.service-id }} --query 'Service.Url' --output text)"
+          echo "Client App Runner URL: $(aws apprunner describe-service --region ${{ secrets.AWS_REGION }} --service-arn ${{ steps.deploy-client.outputs.service-id }} --query 'Service.Url' --output text)"
