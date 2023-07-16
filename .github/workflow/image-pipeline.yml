@@ -84,6 +84,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       
       - name: Deploy server to App Runner
+        uses: awslabs/amazon-app-runner-deploy@main
+        service: app-runner-image-deploy-service
         id: deploy-server
         run: |
           aws apprunner create-service \
@@ -93,6 +95,8 @@ jobs:
             --instance-configuration "InstanceRoleArn=${{ secrets.ROLE_ARN }}"
       
       - name: Deploy client to App Runner
+        uses: awslabs/amazon-app-runner-deploy@main
+        service: app-runner-image-deploy-service
         id: deploy-client
         run: |
           aws apprunner create-service \
